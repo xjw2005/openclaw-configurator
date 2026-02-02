@@ -20,8 +20,14 @@ export function getLocale(): Locale {
   return currentLocale;
 }
 
-export function t(key: MessageKey): string {
-  return locales[currentLocale][key] ?? locales.en[key] ?? key;
+export function t(key: MessageKey, params?: Record<string, string>): string {
+  let message = locales[currentLocale][key] ?? locales.en[key] ?? key;
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      message = message.replace(`{${k}}`, v);
+    }
+  }
+  return message;
 }
 
 export function detectLocale(): Locale {

@@ -1,4 +1,4 @@
-import { createLogger, enquirer } from "@/utils";
+import { createLogger, enquirer, which } from "@/utils";
 import { t, setLocale, detectLocale, type Locale } from "@/i18n";
 
 const logger = createLogger("App");
@@ -6,6 +6,7 @@ const logger = createLogger("App");
 interface AppContext {
   abortController: AbortController;
   locale: Locale;
+  openclawPath: string;
 }
 
 let ctx: AppContext | null = null;
@@ -16,6 +17,7 @@ async function init(): Promise<AppContext> {
   return {
     abortController: new AbortController(),
     locale: "en",
+    openclawPath: "",
   };
 }
 
@@ -47,6 +49,17 @@ async function run(ctx: AppContext): Promise<void> {
 
   console.log();
   console.log(t("welcome"));
+  console.log();
+
+  // Step 2: Check openclaw executable
+  console.log(t("checking_openclaw"));
+  const openclawPath = which("openclaw");
+  if (!openclawPath) {
+    console.log(t("openclaw_not_found"));
+    process.exit(1);
+  }
+  ctx.openclawPath = openclawPath;
+  console.log(t("openclaw_found", { path: openclawPath }));
   console.log();
 
   // TODO: next steps

@@ -4,5 +4,8 @@
   "confirm_continue": "Do you want to continue?",
   "input_name": "Enter name",
   "operation_cancelled": "Operation cancelled",
-  "operation_completed": "Operation completed"
+  "operation_completed": "Operation completed",
+  "checking_openclaw": "Checking openclaw executable...",
+  "openclaw_found": "openclaw found: {path}",
+  "openclaw_not_found": "openclaw not found. Please ensure openclaw is installed and in your PATH."
 }
