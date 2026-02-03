@@ -1,13 +1,15 @@
 import {
   createLogger,
-  select,
   input,
   ora,
   symbols,
   fetchModels,
-  filterSupportedModels,
+  filterModelsByVendor,
   setProviderConfig,
   isSupportedProvider,
+  VENDOR_FILTERS,
+  runMenu,
+  MENU_EXIT,
   type OpenclawModel,
   type SupportedProvider,
 } from "@/utils";
@@ -17,25 +19,14 @@ const logger = createLogger("ConfigFlow");
 
 const PACKYCODE_BASE_URL = "https://www.packyapi.com";
 
-type ConfigAction = "add" | "exit";
 type Vendor = "packycode" | "other";
 
-async function selectAction(): Promise<ConfigAction> {
-  return select({
-    message: t("config_action_prompt"),
-    choices: [
-      { value: "add" as const, name: t("config_action_add") },
-      { value: "exit" as const, name: t("config_action_exit") },
-    ],
-  });
-}
-
-async function selectVendor(): Promise<Vendor> {
-  return select({
+async function selectVendor(): Promise<Vendor | null> {
+  return runMenu<Vendor>({
     message: t("select_vendor"),
-    choices: [
-      { value: "packycode" as const, name: t("vendor_packycode") },
-      { value: "other" as const, name: t("vendor_other") },
+    items: [
+      { label: t("vendor_packycode"), value: "packycode" },
+      { label: t("vendor_other"), value: "other" },
     ],
   });
 }
@@ -59,12 +50,14 @@ function getProviderBaseUrl(
   return baseUrl;
 }
 
-async function selectModel(models: OpenclawModel[]): Promise<OpenclawModel> {
-  return select({
+async function selectModel(
+  models: OpenclawModel[]
+): Promise<OpenclawModel | null> {
+  return runMenu<OpenclawModel>({
     message: t("select_model"),
-    choices: models.map((m) => ({
+    items: models.map((m) => ({
+      label: `${m.name} (${m.key})`,
       value: m,
-      name: `${m.name} (${m.key})`,
     })),
   });
 }
@@ -72,6 +65,9 @@ async function selectModel(models: OpenclawModel[]): Promise<OpenclawModel> {
 async function configureProvider(): Promise<void> {
   // Step 1: Select vendor
   const vendor = await selectVendor();
+  if (!vendor) {
+    return;
+  }
   logger.debug(`Selected vendor: ${vendor}`);
 
   // Step 2: Get base URL
@@ -80,10 +76,10 @@ async function configureProvider(): Promise<void> {
 
   // Step 3: Fetch and filter models
   const spinner = ora(t("fetching_models")).start();
-  let supportedModels: OpenclawModel[];
+  let filteredModels: OpenclawModel[];
   try {
     const result = fetchModels();
-    supportedModels = filterSupportedModels(result.models);
+    filteredModels = filterModelsByVendor(result.models, vendor);
     spinner.succeed();
   } catch (err) {
     spinner.fail(t("fetching_models_failed"));
@@ -91,17 +87,24 @@ async function configureProvider(): Promise<void> {
     return;
   }
 
-  if (supportedModels.length === 0) {
+  if (filteredModels.length === 0) {
     console.log(`${symbols.warning} ${t("no_models_available")}`);
     return;
   }
 
   // Step 4: Select model
-  const selectedModel = await selectModel(supportedModels);
+  const selectedModel = await selectModel(filteredModels);
+  if (!selectedModel) {
+    return;
+  }
   logger.debug(`Selected model: ${selectedModel.key}`);
 
   // Step 5: Save provider config
-  const provider = isSupportedProvider(selectedModel.key);
+  const vendorFilter = VENDOR_FILTERS[vendor];
+  const allowedProviders = vendorFilter?.providers.length
+    ? vendorFilter.providers
+    : undefined;
+  const provider = isSupportedProvider(selectedModel.key, allowedProviders);
   if (!provider) {
     return;
   }
@@ -112,7 +115,9 @@ async function configureProvider(): Promise<void> {
       baseUrl: providerBaseUrl,
       models: [],
     });
-    console.log(`${symbols.success} ${t("provider_config_saved", { provider })}`);
+    console.log(
+      `${symbols.success} ${t("provider_config_saved", { provider })}`
+    );
   } catch (err) {
     console.log(`${symbols.error} ${t("provider_config_failed")}`);
     logger.error(err instanceof Error ? err.message : String(err));
@@ -120,14 +125,19 @@ async function configureProvider(): Promise<void> {
 }
 
 export async function runConfigLoop(): Promise<void> {
-  while (true) {
-    const action = await selectAction();
-
-    if (action === "exit") {
-      break;
-    }
-
-    await configureProvider();
-    console.log();
-  }
+  await runMenu({
+    message: t("config_action_prompt"),
+    loop: true,
+    items: [
+      {
+        label: t("config_action_add"),
+        value: "add",
+        action: configureProvider,
+      },
+      {
+        label: t("config_action_exit"),
+        value: MENU_EXIT,
+      },
+    ],
+  });
 }

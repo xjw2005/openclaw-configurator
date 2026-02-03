@@ -14,6 +14,10 @@ make clean      # Remove dist/ and node_modules/
 
 Always run `make typecheck build` after changes to verify types and build succeed.
 
+## Code Style
+
+- **MANDATORY**: Use `spawn`/`spawnSync` instead of `exec`/`execSync` for executing external commands (safer, avoids shell injection)
+
 ## Architecture
 
 This is a CLI tool for configuring OpenClaw (Linux). TypeScript source compiles to a single ESM bundle via esbuild.
