@@ -101,7 +101,7 @@ async function configureProvider(): Promise<void> {
   }
   logger.debug(`Selected model: ${selectedModel.key}`);
 
-  // Step 5: Save provider config
+  // Step 5: Determine provider
   const vendorFilter = VENDOR_FILTERS[vendor];
   const allowedProviders = vendorFilter?.providers.length
     ? vendorFilter.providers
@@ -111,32 +111,24 @@ async function configureProvider(): Promise<void> {
     return;
   }
 
-  const providerBaseUrl = getProviderBaseUrl(baseUrl, provider);
-  const saveSpinner = ora(t("saving_provider_config")).start();
-  try {
-    setProviderConfig(provider, {
-      baseUrl: providerBaseUrl,
-      models: [],
-    });
-    saveSpinner.succeed(t("provider_config_saved", { provider }));
-  } catch (err) {
-    saveSpinner.fail(t("provider_config_failed"));
-    logger.error(err instanceof Error ? err.message : String(err));
-    return;
-  }
-
-  // Step 6: Set API key
+  // Step 6: Get API key
   const apiKey = await password({
     message: t("input_api_key", { provider }),
     mask: "*",
   });
 
-  const keySpinner = ora(t("saving_api_key")).start();
+  // Step 7: Save all config at once (atomic save)
+  const providerBaseUrl = getProviderBaseUrl(baseUrl, provider);
+  const saveSpinner = ora(t("saving_config")).start();
   try {
+    setProviderConfig(provider, {
+      baseUrl: providerBaseUrl,
+      models: [],
+    });
     setApiKey(provider, apiKey);
-    keySpinner.succeed(t("api_key_saved", { provider }));
+    saveSpinner.succeed(t("config_saved", { provider }));
   } catch (err) {
-    keySpinner.fail(t("api_key_failed"));
+    saveSpinner.fail(t("config_save_failed"));
     logger.error(err instanceof Error ? err.message : String(err));
   }
 }
