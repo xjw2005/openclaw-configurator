@@ -4,6 +4,7 @@ export {
   fetchModels,
   filterModelsByVendor,
   setProviderConfig,
+  setModel,
   isSupportedProvider,
   VENDOR_FILTERS,
   type OpenclawModel,

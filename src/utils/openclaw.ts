@@ -147,3 +147,12 @@ export function setProviderConfig(
     throw new Error(result.stderr || "Failed to set provider config");
   }
 }
+
+export function setModel(modelKey: string): void {
+  const result = spawnSync("openclaw", ["models", "set", modelKey], {
+    encoding: "utf-8",
+  });
+  if (result.status !== 0) {
+    throw new Error(result.stderr || "Failed to set model");
+  }
+}

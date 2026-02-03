@@ -7,6 +7,7 @@ import {
   fetchModels,
   filterModelsByVendor,
   setProviderConfig,
+  setModel,
   setApiKey,
   isSupportedProvider,
   VENDOR_FILTERS,
@@ -126,6 +127,7 @@ async function configureProvider(): Promise<void> {
       models: [],
     });
     setApiKey(provider, apiKey);
+    setModel(selectedModel.key);
     saveSpinner.succeed(t("config_saved", { provider }));
   } catch (err) {
     saveSpinner.fail(t("config_save_failed"));
