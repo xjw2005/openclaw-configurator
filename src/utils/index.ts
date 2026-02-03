@@ -12,13 +12,14 @@ export {
   type SupportedProvider,
   type VendorFilter,
 } from "./openclaw";
+export { setApiKey } from "./auth";
 export {
   runMenu,
   MENU_EXIT,
   type MenuItem,
   type MenuConfig,
 } from "./menu";
-export { select, input } from "@inquirer/prompts";
+export { select, input, password } from "@inquirer/prompts";
 export { default as ora, oraPromise } from "ora";
 export { default as chalk } from "chalk";
 export { default as symbols } from "log-symbols";

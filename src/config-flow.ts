@@ -1,11 +1,13 @@
 import {
   createLogger,
   input,
+  password,
   ora,
   symbols,
   fetchModels,
   filterModelsByVendor,
   setProviderConfig,
+  setApiKey,
   isSupportedProvider,
   VENDOR_FILTERS,
   runMenu,
@@ -119,6 +121,22 @@ async function configureProvider(): Promise<void> {
     saveSpinner.succeed(t("provider_config_saved", { provider }));
   } catch (err) {
     saveSpinner.fail(t("provider_config_failed"));
+    logger.error(err instanceof Error ? err.message : String(err));
+    return;
+  }
+
+  // Step 6: Set API key
+  const apiKey = await password({
+    message: t("input_api_key", { provider }),
+    mask: "*",
+  });
+
+  const keySpinner = ora(t("saving_api_key")).start();
+  try {
+    setApiKey(provider, apiKey);
+    keySpinner.succeed(t("api_key_saved", { provider }));
+  } catch (err) {
+    keySpinner.fail(t("api_key_failed"));
     logger.error(err instanceof Error ? err.message : String(err));
   }
 }

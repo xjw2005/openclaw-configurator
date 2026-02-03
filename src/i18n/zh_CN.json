@@ -21,5 +21,9 @@
   "select_model": "选择要添加的模型",
   "saving_provider_config": "正在保存供应商配置...",
   "provider_config_saved": "供应商配置已保存: {provider}",
-  "provider_config_failed": "保存供应商配置失败"
+  "provider_config_failed": "保存供应商配置失败",
+  "input_api_key": "请输入 {provider} 的 API Key",
+  "saving_api_key": "正在保存 API Key...",
+  "api_key_saved": "API Key 已保存: {provider}",
+  "api_key_failed": "保存 API Key 失败"
 }
