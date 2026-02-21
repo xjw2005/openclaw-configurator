@@ -161,30 +161,7 @@ export function fetchModels(): OpenclawModelsResult {
   if (result.status !== 0) {
     throw new Error(result.stderr || "Failed to fetch models");
   }
-  const parsed = JSON.parse(result.stdout) as OpenclawModelsResult;
-
-  // Normalize OpenClaw's openai-codex namespace to openai so downstream
-  // provider detection/filtering treats codex models consistently.
-  const normalizedModels = parsed.models.map((model) => {
-    if (!model.key.startsWith("openai-codex/")) {
-      return model;
-    }
-    const suffix = model.key.slice("openai-codex/".length);
-    return {
-      ...model,
-      key: `openai/${suffix}`,
-    };
-  });
-
-  // Deduplicate after normalization (e.g. both openai/* and openai-codex/* exist).
-  const uniqueModels = Array.from(
-    new Map(normalizedModels.map((model) => [model.key, model])).values()
-  );
-
-  return {
-    count: uniqueModels.length,
-    models: uniqueModels,
-  };
+  return JSON.parse(result.stdout) as OpenclawModelsResult;
 }
 
 export function filterModelsByVendor(
